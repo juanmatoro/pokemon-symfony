@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Debilidad;
 use App\Entity\Pokemon;
+use App\Form\PokemonType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\Entity;
@@ -30,7 +31,7 @@ class PokemonController extends AbstractController
         return $this->render("pokemons/showPokemons.html.twig", ["pokemons" => $pokemons]);
     }
 
-    #[Route("/insert/pokemon", name:"newpokemon")]
+    #[Route("/insert/pokemon", name:"insertpokemon")]
     public function insertPokemon(EntityManagerInterface $doctrine)
     {
         $pokemon = new Pokemon();
@@ -81,4 +82,12 @@ class PokemonController extends AbstractController
 
         return new Response("Pokemons insertados correctamente.");
     }
+
+    #[Route("/new/pokemon", name:"newpokemon")]
+    public function newPokemon(EntityManagerInterface $doctrine)
+    {
+        $form = $this->createForm(PokemonType::class);
+        return $this->render("pokemons/insertPokemon.html.twig", ["pokemonform"=>$form]);
+    }
+
 }
