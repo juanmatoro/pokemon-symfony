@@ -5,12 +5,14 @@ namespace App\Controller;
 use App\Entity\Debilidad;
 use App\Entity\Pokemon;
 use App\Form\PokemonType;
+use App\Form\UserType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 class PokemonController extends AbstractController
@@ -28,6 +30,7 @@ class PokemonController extends AbstractController
        // $pokemon = $repository->findOneBy(["name"=>$name]);
         return $this->render("pokemons/showPokemon.html.twig", ["pokemon" => $pokemon]);
     }
+
     #[Route("/", name:"showpokemons")]
     public function showPokemons(EntityManagerInterface $doctrine)
     {
@@ -110,6 +113,101 @@ class PokemonController extends AbstractController
             "pokemons/insertPokemon.html.twig",
             ["pokemonform"=>$form]
         );
+    }
+
+    #[Route("/new/user", name:"newuser")]
+    public function newUser(EntityManagerInterface $doctrine, Request $request, UserPasswordHasherInterface $hasher)
+    {
+        $form = $this->createForm(UserType::class);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $user = $form->getData();
+            $password = $user->getPassword();
+            $passwordCifrada = $hasher->hashPassword($user, $password);
+            $user->setPassword($passwordCifrada);
+
+            $doctrine->persist($user);
+            $doctrine->flush();
+
+            $this->addFlash('éxito', $user->getName().' insertado correctamente');
+
+            return $this->redirectToRoute("showpokemons");
+
+        }
+
+        return $this->render(
+            "pokemons/insertpokemon.html.twig",
+            ["pokemonform"=>$form]
+        );
+    }
+
+    #[Route("/new/admin", name:"newadmin")]
+    public function newAdmin(EntityManagerInterface $doctrine, Request $request, UserPasswordHasherInterface $hasher)
+    {
+        $form = $this->createForm(UserType::class);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $user = $form->getData();
+            $password = $user->getPassword();
+            $passwordCifrada = $hasher->hashPassword($user, $password);
+            $user->setPassword($passwordCifrada);
+            $user->setRoles(['ROLE_ADMIN', 'ROLE_USER']);
+
+            $doctrine->persist($user);
+            $doctrine->flush();
+
+            $this->addFlash('éxito', $user->getName().' insertado correctamente');
+
+            return $this->redirectToRoute("showpokemons");
+
+        }
+
+        return $this->render(
+            "pokemons/insertpokemon.html.twig",
+            ["pokemonform"=>$form]
+        );
+    }
+
+    #[Route("/edit/pokemon/{id}", name:"editpokemon")]
+    public function editPokemon(EntityManagerInterface $doctrine, Request $request, $id)
+    {
+        $repository = $doctrine->getRepository(Pokemon::class);
+        $pokemon = $repository->find($id);
+        $form = $this->createForm(PokemonType::class, $pokemon);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $pokemon = $form->getData();
+            $doctrine->persist($pokemon);
+            $doctrine->flush();
+
+            $this->addFlash('éxito', $pokemon->getName().' editado correctamente');
+
+            return $this->redirectToRoute("showpokemons");
+
+        }
+
+        return $this->render(
+            "pokemons/insertPokemon.html.twig",
+            ["pokemonform"=>$form]
+        );
+    }
+
+    #[Route("/delete/pokemon/{id}", name:"deletepokemon")]
+    public function deletePokemon(EntityManagerInterface $doctrine, $id/* $name */)
+    {
+
+        $repository = $doctrine->getRepository(Pokemon::class);
+        $pokemon = $repository->find($id);
+        $doctrine->remove($pokemon);
+        $doctrine->flush();
+        $this->addFlash('éxito', $pokemon->getName().' borrado correctamente');
+        return $this->redirectToRoute('showpokemons');
     }
 
 }
