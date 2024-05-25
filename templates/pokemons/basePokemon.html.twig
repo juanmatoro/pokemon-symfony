@@ -21,6 +21,15 @@
                         <a class="nav-link" href="{{ path("newpokemon") }}">Crear Pokemon</a>
                     </div>
                 </div>
+                <div>
+                    {% if is_granted('ROLE_USER') %}
+                        {{ app.user.name|default('') }}
+                        {% else %}
+                            <a href='{{ path("app_login") }}'>Login</a>
+                    {% endif %}
+                    
+                    
+                </div>
             </nav>
             {% block contenido %} {% endblock %}
         </div>
