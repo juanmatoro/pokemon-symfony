@@ -9,11 +9,16 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class PokemonController extends AbstractController
 {       ///pokemon/{name}
+    ///
+
+
+
     #[Route("/pokemon/{id}", name:"viewpokemon")]
     public function showPokemon(EntityManagerInterface $doctrine, $id/* $name */)
     {
@@ -23,7 +28,7 @@ class PokemonController extends AbstractController
        // $pokemon = $repository->findOneBy(["name"=>$name]);
         return $this->render("pokemons/showPokemon.html.twig", ["pokemon" => $pokemon]);
     }
-    #[Route("/pokemons", name:"showpokemons")]
+    #[Route("/", name:"showpokemons")]
     public function showPokemons(EntityManagerInterface $doctrine)
     {
         $repository = $doctrine->getRepository(Pokemon::class);
@@ -84,10 +89,27 @@ class PokemonController extends AbstractController
     }
 
     #[Route("/new/pokemon", name:"newpokemon")]
-    public function newPokemon(EntityManagerInterface $doctrine)
+    public function newPokemon(EntityManagerInterface $doctrine, Request $request)
     {
         $form = $this->createForm(PokemonType::class);
-        return $this->render("pokemons/insertPokemon.html.twig", ["pokemonform"=>$form]);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $pokemon = $form->getData();
+            $doctrine->persist($pokemon);
+            $doctrine->flush();
+
+            $this->addFlash('éxito', $pokemon->getName().' insertado correctamente');
+
+            return $this->redirectToRoute("showpokemons");
+
+        }
+
+        return $this->render(
+            "pokemons/insertPokemon.html.twig",
+            ["pokemonform"=>$form]
+        );
     }
 
 }

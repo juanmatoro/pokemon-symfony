@@ -2,6 +2,11 @@
 {% extends "pokemons/basePokemon.html.twig" %}
 {% block contenido %}
 
-            {{ form (pokemonform)}}
+    {% for message in app.flashes('éxito') %}
+        <p>{{ message }}</p>
+    {% endfor %}
+
+    {{ form (pokemonform)}}
+
 {% endblock %}
 
