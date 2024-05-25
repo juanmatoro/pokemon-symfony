@@ -6,6 +6,7 @@ use App\Entity\Debilidad;
 use App\Entity\Pokemon;
 use App\Form\PokemonType;
 use App\Form\UserType;
+use App\Manager\PokemonManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\Entity;
@@ -92,7 +93,7 @@ class PokemonController extends AbstractController
     }
 
     #[Route("/new/pokemon", name:"newpokemon")]
-    public function newPokemon(EntityManagerInterface $doctrine, Request $request)
+    public function newPokemon(EntityManagerInterface $doctrine, Request $request, PokemonManager $manager)
     {
         $form = $this->createForm(PokemonType::class);
 
@@ -100,6 +101,15 @@ class PokemonController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $pokemon = $form->getData();
+
+            $pokemonFile = $form->get('imageFile')->getData();
+
+            if ($pokemonFile){
+                $pokemonImage = $manager->uploadImage($pokemonFile, $this->getParameter("kernel.project_dir")."/public/images");
+
+                $pokemon->setImage("/images/$pokemonImage");
+            }
+
             $doctrine->persist($pokemon);
             $doctrine->flush();
 
@@ -138,7 +148,7 @@ class PokemonController extends AbstractController
         }
 
         return $this->render(
-            "pokemons/insertpokemon.html.twig",
+            "pokemons/insertPokemon.html.twig",
             ["pokemonform"=>$form]
         );
     }
@@ -167,7 +177,7 @@ class PokemonController extends AbstractController
         }
 
         return $this->render(
-            "pokemons/insertpokemon.html.twig",
+            "pokemons/insertPokemon.html.twig",
             ["pokemonform"=>$form]
         );
     }
